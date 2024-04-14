@@ -1,0 +1,30 @@
+---
+# repo: jomrr/ansible-role-logindefs
+# file: tasks/main.yml
+
+- name: "Check if /etc/login.defs exists"
+  ansible.builtin.stat:
+    path: "/etc/login.defs"
+  register: _login_defs
+
+- name: "Configure /etc/login.defs"
+  become: true
+  ansible.builtin.lineinfile:
+    path: "/etc/login.defs"
+    regexp: '^#?{{ item.key }}\s*'
+    line: "{{ item.key }} {{ item.value }}"
+    backrefs: true
+    backup: true
+  loop: "{{ lookup('dict', logindefs) }}"
+  when: _login_defs.stat.exists
+
+- name: "Disable options in /etc/login.defs"
+  become: true
+  ansible.builtin.lineinfile:
+    path: "/etc/login.defs"
+    regexp: '^({{ item }}\s+.*)$'
+    line: '# \1'
+    backrefs: true
+    backup: true
+  loop: "{{ logindefs_disable }}"
+  when: _login_defs.stat.exists

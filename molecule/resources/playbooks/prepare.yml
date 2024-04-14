@@ -2,7 +2,7 @@
 # file: molecule/resources/playbooks/prepare.yml
 # code: language=ansible-jinja
 
-- name: "PLAYBOOK | Prepare"
+- name: "PLAYBOOK | Prepare | logindefs"
   hosts: all
   become: true
   gather_facts: true
