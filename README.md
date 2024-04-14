@@ -6,7 +6,7 @@
 
 ## Description
 
-This Ansible role installs and configures logindefs on supported platforms.
+This Ansible role configures /etc/login.defs on supported platforms.
 
 ## Prerequisites
 
