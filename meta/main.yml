@@ -11,4 +11,11 @@ galaxy_info:
   license: MIT
   issue_tracker_url: https://github.com/jomrr/ansible-role-logindefs/issues
   min_ansible_version: "2.15"
-  galaxy_tags: []
+  galaxy_tags:
+    - login
+    - logindefs
+    - shadow
+    - user
+    - useradd
+    - userdel
+    - usermod
