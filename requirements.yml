@@ -1,0 +1,8 @@
+---
+# role: jomrr.logindefs
+# file: meta/requirements.yml
+
+collections:
+  - {'name': 'community.general'}
+
+roles: []
