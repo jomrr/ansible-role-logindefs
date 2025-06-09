@@ -3,7 +3,7 @@
 # file: defaults/main.yml
 
 # options to configure in /etc/login.defs
-logindefs:
+logindefs_enabled:
   ENCRYPT_METHOD: "YESCRYPT"      # Use YESCRYPT for password encryption
   YESCRYPT_COST_FACTOR: "10"      # Cost factor for yescrypt algorithm
   LOGIN_TIMEOUT: "60"             # Maximum time in seconds for login
@@ -23,5 +23,5 @@ logindefs:
   CHFN_RESTRICT: "rwh"            # Restrict the fields in the chfn command to work, home, and real name
 
 # options to disable (comment out) in /etc/login.defs
-logindefs_disable:
+logindefs_disabled:
   - HUSHLOGIN_FILE

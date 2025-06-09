@@ -15,7 +15,7 @@
     line: "{{ item.key }} {{ item.value }}"
     backrefs: true
     backup: true
-  loop: "{{ lookup('dict', logindefs) }}"
+  loop: "{{ lookup('dict', logindefs_enabled) }}"
   when: _login_defs.stat.exists
 
 - name: "Disable options in /etc/login.defs"
@@ -26,5 +26,5 @@
     line: '# \1'
     backrefs: true
     backup: true
-  loop: "{{ logindefs_disable }}"
+  loop: "{{ logindefs_disabled }}"
   when: _login_defs.stat.exists
