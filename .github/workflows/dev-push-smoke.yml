@@ -1,0 +1,50 @@
+---
+# role: logindefs
+# file: .github/workflows/dev-push-smoke.yml
+
+name: dev push smoke
+
+on:
+  push:
+    branches:
+      - dev
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  molecule-smoke:
+    name: Molecule smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          enable-cache: true
+
+      - name: Show Podman environment
+        run: |
+          set -euo pipefail
+          podman --version
+          podman info
+
+      - name: Run Molecule smoke scenario
+        run: |
+          set -euo pipefail
+          uvx \
+            --from molecule \
+            --with ansible-core \
+            --with ansible-lint \
+            --with "molecule-plugins[podman]" \
+            molecule test -s "default"
