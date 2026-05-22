@@ -2,7 +2,6 @@
 # file: .gitignore
 
 __pycache__/
-!.gitkeep
 .ansible/
 .cache/
 .idea/
