@@ -4,13 +4,27 @@
 
 - name: "Check /etc/login.defs"
   ansible.builtin.stat:
-    path: "/etc/login.defs"
-  register: __logindefs_file
+    path: /etc/login.defs
+  register: __logindefs_etc_file
 
 - name: "Fail when /etc/login.defs is missing"
   ansible.builtin.fail:
     msg: "/etc/login.defs does not exist on this host."
-  when: not __logindefs_file.stat.exists
+  when:
+    - not __logindefs_etc_file.stat.exists
+    - ansible_facts.os_family != "Suse"
+
+- name: "Create /etc/login.defs from SUSE vendor defaults"
+  ansible.builtin.copy:
+    src: /usr/etc/login.defs
+    dest: /etc/login.defs
+    owner: root
+    group: root
+    mode: "0644"
+    remote_src: true
+  when:
+    - not __logindefs_etc_file.stat.exists
+    - ansible_facts.os_family == "Suse"
 
 - name: "Configure login.defs settings"
   become: true
