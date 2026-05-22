@@ -2,26 +2,30 @@
 # repo: jomrr/ansible-role-logindefs
 # file: defaults/main.yml
 
-# options to configure in /etc/login.defs
-logindefs_enabled:
-  ENCRYPT_METHOD: "YESCRYPT"      # Use YESCRYPT for password encryption
-  YESCRYPT_COST_FACTOR: "10"      # Cost factor for yescrypt algorithm
-  LOGIN_TIMEOUT: "60"             # Maximum time in seconds for login
-  LOGIN_RETRIES: "5"              # Maximum number of login retries if password is bad
-  FAILLOG_ENAB: "yes"             # Enable logging of failed login attempts
-  LOG_OK_LOGINS: "yes"            # Enable logging of successful logins
-  LOG_UNKFAIL_ENAB: "no"          # Disable logging of unknown usernames that fail to login, as they may become world readable
-  SYSLOG_SU_ENAB: "yes"           # Enable logging of su activity
-  SYSLOG_SG_ENAB: "yes"           # Enable logging of sg activity
-  PASS_MAX_DAYS: "384"            # Maximum number of days a password may be used
-  PASS_MIN_DAYS: "1"              # Minimum number of days allowed between password changes
-  PASS_MIN_LEN: "16"              # Minimum acceptable password length
-  PASS_WARN_AGE: "7"              # Number of days warning given before a password expires
-  UMASK: "077"                    # Secure default for user file creation mask
-  HOME_MODE: "0700"               # Default home directory permissions
-  TTYPERM: "0600"                 # Default tty permissions
-  CHFN_RESTRICT: "rwh"            # Restrict the fields in the chfn command to work, home, and real name
+logindefs_settings:
+  LOGIN_TIMEOUT: "60"
+  LOGIN_RETRIES: "5"
 
-# options to disable (comment out) in /etc/login.defs
-logindefs_disabled:
-  - HUSHLOGIN_FILE
+  FAILLOG_ENAB: "yes"
+  LOG_OK_LOGINS: "yes"
+  LOG_UNKFAIL_ENAB: "no"
+  SYSLOG_SU_ENAB: "yes"
+  SYSLOG_SG_ENAB: "yes"
+
+  PASS_MAX_DAYS: "384"
+  PASS_MIN_DAYS: "1"
+  PASS_WARN_AGE: "7"
+
+  UMASK: "077"
+  HOME_MODE: "0700"
+  DEFAULT_HOME: "no"
+  TTYPERM: "0600"
+  CHFN_RESTRICT: "rwh"
+
+  SHA_CRYPT_MIN_ROUNDS: "1000000"
+  SHA_CRYPT_MAX_ROUNDS: "1000000"
+  YESCRYPT_COST_FACTOR: "7"
+
+logindefs_force_settings: {}
+
+logindefs_disabled: []

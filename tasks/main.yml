@@ -2,29 +2,41 @@
 # repo: jomrr/ansible-role-logindefs
 # file: tasks/main.yml
 
-- name: "Check if /etc/login.defs exists"
+- name: "Check /etc/login.defs"
   ansible.builtin.stat:
     path: "/etc/login.defs"
-  register: _login_defs
+  register: __logindefs_file
 
-- name: "Configure /etc/login.defs"
+- name: "Fail when /etc/login.defs is missing"
+  ansible.builtin.fail:
+    msg: "/etc/login.defs does not exist on this host."
+  when: not __logindefs_file.stat.exists
+
+- name: "Configure login.defs settings"
   become: true
   ansible.builtin.lineinfile:
     path: "/etc/login.defs"
-    regexp: '^#?{{ item.key }}\s*'
+    regexp: '^\s*{{ item.key | regex_escape }}\s+.*$'
     line: "{{ item.key }} {{ item.value }}"
     backrefs: true
     backup: true
-  loop: "{{ lookup('dict', logindefs_enabled) }}"
-  when: _login_defs.stat.exists
+  loop: "{{ logindefs_settings | dict2items }}"
+  when: item.key != "ENCRYPT_METHOD"
 
-- name: "Disable options in /etc/login.defs"
+- name: "Configure forced login.defs settings"
   become: true
   ansible.builtin.lineinfile:
     path: "/etc/login.defs"
-    regexp: '^({{ item }}\s+.*)$'
-    line: '# \1'
-    backrefs: true
+    regexp: '^\s*#?\s*{{ item.key | regex_escape }}\s+.*$'
+    line: "{{ item.key }} {{ item.value }}"
+    backup: true
+  loop: "{{ logindefs_force_settings | dict2items }}"
+
+- name: "Disable active login.defs settings"
+  become: true
+  ansible.builtin.replace:
+    path: "/etc/login.defs"
+    regexp: '^(?!#)(\s*{{ item | regex_escape }}\s+.*)$'
+    replace: '# \1'
     backup: true
   loop: "{{ logindefs_disabled }}"
-  when: _login_defs.stat.exists

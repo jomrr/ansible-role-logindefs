@@ -1,56 +1,128 @@
-# role: jomrr.logindefs
+# role: logindefs
 # file: molecule/resources/playbooks/verify.yml
-# code: language=ansible-jinja
 
 - name: "PLAYBOOK | Verify | logindefs"
   hosts: all
   gather_facts: true
   become: true
+  vars:
+    __logindefs_test_user: "logindefs_molecule"
   tasks:
-    - name: "Ensure util-linux is installed"
-      ansible.builtin.package:
-        name: "util-linux"
-        state: "present"
-
-    - name: "Create testuser with useradd"
-      ansible.builtin.command:
-        cmd: "useradd -m -s /bin/bash testuser"
-      register: _useradd
-      changed_when: false
-      failed_when: _useradd.rc > 0 and not "already exists" in _useradd.stderr
-
-    - name: "Check home directory permissions"
+    - name: "Check /etc/login.defs"
       ansible.builtin.stat:
-        path: "/home/testuser"
-      register: home_stat
+        path: "/etc/login.defs"
+      register: __logindefs_verify_file
 
-    - name: "Verify home directory permissions"
+    - name: "Verify /etc/login.defs exists"
       ansible.builtin.assert:
-        that: home_stat.stat.mode == '0700'
-        fail_msg: "Home directory permissions are not 0700"
-        success_msg: "Home directory permissions are 0700"
+        that:
+          - __logindefs_verify_file.stat.exists
+          - __logindefs_verify_file.stat.isreg
+        fail_msg: "/etc/login.defs is missing"
 
-    - name: "Set password for testuser"
-      become: true
-      become_user: testuser
-      ansible.builtin.command:
-        cmd: "echo 'testuser:Test123blabla,0815' | chpasswd"
-      changed_when: false
+    - name: "Read /etc/login.defs"
+      ansible.builtin.slurp:
+        path: "/etc/login.defs"
+      register: __logindefs_verify_slurp
 
-    - name: "Check if testuser can login"
-      ansible.builtin.command:
-        cmd: "su - testuser -c 'whoami'"
-      register: _login
-      changed_when: false
+    - name: "Store /etc/login.defs content"
+      ansible.builtin.set_fact:
+        __logindefs_login_defs_content: "{{ __logindefs_verify_slurp.content | b64decode }}"
 
-    - name: "Check if testuser can login"
-      ansible.builtin.command:
-        cmd: "chage -l testuser"
-      register: _chage
-      changed_when: false
-      failed_when: not '384' in _chage.stdout
+    - name: "Load role defaults"
+      become: false
+      delegate_to: localhost
+      ansible.builtin.include_vars:
+        file: "{{ lookup('ansible.builtin.env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
+        name: __logindefs_role_defaults
 
-    - name: "Clean up test user"
-      ansible.builtin.command:
-        cmd: "userdel -r testuser"
-      changed_when: false
+    - name: "Verify ENCRYPT_METHOD is not configured by defaults"
+      ansible.builtin.assert:
+        that:
+          - "'ENCRYPT_METHOD' not in __logindefs_role_defaults.logindefs_settings"
+          - "'ENCRYPT_METHOD' not in __logindefs_role_defaults.logindefs_force_settings"
+        fail_msg: "ENCRYPT_METHOD must not be configured by role defaults"
+
+    - name: "Verify PASS_MIN_LEN is not configured by defaults"
+      ansible.builtin.assert:
+        that:
+          - "'PASS_MIN_LEN' not in __logindefs_role_defaults.logindefs_settings"
+          - "'PASS_MIN_LEN' not in __logindefs_role_defaults.logindefs_force_settings"
+        fail_msg: "PASS_MIN_LEN must not be configured by role defaults"
+
+    - name: "Verify active default settings were applied"
+      ansible.builtin.assert:
+        that:
+          - __logindefs_login_defs_content is regex('(?m)^\\s*' ~ (item.key | regex_escape) ~ '\\s+' ~ (item.value | regex_escape) ~ '\\s*$')
+        fail_msg: "{{ item.key }} is active but does not match the role default"
+      loop: "{{ __logindefs_role_defaults.logindefs_settings | dict2items }}"
+      when: __logindefs_login_defs_content is regex('(?m)^\\s*' ~ (item.key | regex_escape) ~ '\\s+')
+
+    - name: "Store behavioral verification flags"
+      ansible.builtin.set_fact:
+        __logindefs_verify_home_mode: "{{ __logindefs_login_defs_content is regex('(?m)^\\s*HOME_MODE\\s+0700\\s*$') }}"
+        __logindefs_verify_password_aging: >-
+          {{
+            __logindefs_login_defs_content is regex('(?m)^\\s*PASS_MAX_DAYS\\s+384\\s*$')
+            and __logindefs_login_defs_content is regex('(?m)^\\s*PASS_MIN_DAYS\\s+1\\s*$')
+            and __logindefs_login_defs_content is regex('(?m)^\\s*PASS_WARN_AGE\\s+7\\s*$')
+          }}
+
+    - name: "Verify user defaults"
+      when: __logindefs_verify_home_mode | bool or __logindefs_verify_password_aging | bool
+      block:
+        - name: "Remove stale test user"
+          ansible.builtin.user:
+            name: "{{ __logindefs_test_user }}"
+            state: absent
+            remove: true
+
+        - name: "Create test user with useradd"
+          ansible.builtin.command:
+            cmd: "useradd -m -s /bin/bash {{ __logindefs_test_user }}"
+          register: __logindefs_useradd
+          changed_when: __logindefs_useradd.rc == 0
+
+        - name: "Check home directory permissions"
+          ansible.builtin.stat:
+            path: "/home/{{ __logindefs_test_user }}"
+          register: __logindefs_home_stat
+
+        - name: "Verify home directory permissions"
+          ansible.builtin.assert:
+            that:
+              - __logindefs_home_stat.stat.mode == '0700'
+            fail_msg: "Home directory permissions are not 0700"
+          when: __logindefs_verify_home_mode | bool
+
+        - name: "Read /etc/shadow"
+          ansible.builtin.slurp:
+            path: "/etc/shadow"
+          register: __logindefs_shadow_slurp
+          when: __logindefs_verify_password_aging | bool
+
+        - name: "Store test user shadow fields"
+          ansible.builtin.set_fact:
+            __logindefs_shadow_fields: >-
+              {{
+                (__logindefs_shadow_slurp.content | b64decode).splitlines()
+                  | select('match', '^' ~ __logindefs_test_user ~ ':')
+                  | first
+                  | split(':')
+              }}
+          when: __logindefs_verify_password_aging | bool
+
+        - name: "Verify password aging defaults"
+          ansible.builtin.assert:
+            that:
+              - __logindefs_shadow_fields[3] == '1'
+              - __logindefs_shadow_fields[4] == '384'
+              - __logindefs_shadow_fields[5] == '7'
+            fail_msg: "Password aging defaults do not match login.defs"
+          when: __logindefs_verify_password_aging | bool
+      always:
+        - name: "Clean up test user"
+          ansible.builtin.user:
+            name: "{{ __logindefs_test_user }}"
+            state: absent
+            remove: true

@@ -4,6 +4,7 @@
 __pycache__/
 !.gitkeep
 .ansible/
+.cache/
 .idea/
 .tox/
 .venv/

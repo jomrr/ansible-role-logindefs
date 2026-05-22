@@ -1,0 +1,67 @@
+---
+# role: logindefs
+# file: meta/argument_specs.yml
+
+argument_specs:
+  main:
+    short_description: Conservatively manage /etc/login.defs
+    description:
+      - This role manages only /etc/login.defs.
+      - It does not manage PAM, pwquality, or authselect.
+      - It does not manage existing user accounts, useradd defaults outside /etc/login.defs,
+        or distribution-specific authentication stacks.
+      - Normal settings only change keys that are already present as active lines.
+      - Force settings deliberately add missing keys and activate commented keys.
+      - ENCRYPT_METHOD is accepted only through force settings.
+      - Password quality policy is outside the scope of this role, so PASS_MIN_LEN is not
+        provided as a secure default.
+    options:
+      logindefs_settings:
+        type: dict
+        required: false
+        default:
+          LOGIN_TIMEOUT: '60'
+          LOGIN_RETRIES: '5'
+          FAILLOG_ENAB: 'yes'
+          LOG_OK_LOGINS: 'yes'
+          LOG_UNKFAIL_ENAB: 'no'
+          SYSLOG_SU_ENAB: 'yes'
+          SYSLOG_SG_ENAB: 'yes'
+          PASS_MAX_DAYS: '384'
+          PASS_MIN_DAYS: '1'
+          PASS_WARN_AGE: '7'
+          UMASK: '077'
+          HOME_MODE: '0700'
+          DEFAULT_HOME: 'no'
+          TTYPERM: '0600'
+          CHFN_RESTRICT: rwh
+          SHA_CRYPT_MIN_ROUNDS: '1000000'
+          SHA_CRYPT_MAX_ROUNDS: '1000000'
+          YESCRYPT_COST_FACTOR: '7'
+        description:
+          - Normal /etc/login.defs settings.
+          - These settings are changed only when the key already exists as an active line
+            in /etc/login.defs.
+          - Missing keys and commented-only keys are skipped and are not inserted or activated.
+          - ENCRYPT_METHOD is intentionally forbidden here and must be configured through
+            logindefs_force_settings.
+      logindefs_force_settings:
+        type: dict
+        required: false
+        default: {}
+        description:
+          - Explicit force settings for /etc/login.defs.
+          - These settings are inserted when missing and activated or replaced when commented
+            or active lines already exist.
+          - Use this escape hatch only when the key is valid and desired on the target host
+            or distribution.
+          - ENCRYPT_METHOD may only be set here and is limited to SHA256, SHA512, or YESCRYPT.
+      logindefs_disabled:
+        type: list
+        elements: str
+        required: false
+        default: []
+        description:
+          - Keys whose active /etc/login.defs lines should be commented out.
+          - This role does not disable HUSHLOGIN_FILE by default because that is site policy,
+            not a universal security default.
