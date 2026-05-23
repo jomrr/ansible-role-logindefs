@@ -32,11 +32,11 @@ Force settings are the explicit escape hatch for administrators who intentionall
 
 The following variables are part of the public role interface.
 
-| Name | Required | Default | Description |
-| ---- | -------- | ------- | ----------- |
-| `logindefs_settings` | False | `LOGIN_TIMEOUT: '60'<br>LOGIN_RETRIES: '5'<br>FAILLOG_ENAB: 'yes'<br>LOG_OK_LOGINS: 'yes'<br>LOG_UNKFAIL_ENAB: 'no'<br>SYSLOG_SU_ENAB: 'yes'<br>SYSLOG_SG_ENAB: 'yes'<br>PASS_MAX_DAYS: '384'<br>PASS_MIN_DAYS: '1'<br>PASS_WARN_AGE: '7'<br>UMASK: '077'<br>HOME_MODE: '0700'<br>DEFAULT_HOME: 'no'<br>TTYPERM: '0600'<br>CHFN_RESTRICT: rwh<br>SHA_CRYPT_MIN_ROUNDS: '1000000'<br>SHA_CRYPT_MAX_ROUNDS: '1000000'<br>YESCRYPT_COST_FACTOR: '7'` | - Normal /etc/login.defs settings.<br>- These settings are changed only when the key already exists as an active line in<br>  /etc/login.defs.<br>- Missing keys and commented-only keys are skipped and are not inserted or activated.<br>- ENCRYPT_METHOD is intentionally forbidden here and must be configured through logindefs_force_settings. |
-| `logindefs_force_settings` | False | `{}` | - Explicit force settings for /etc/login.defs.<br>- These settings are inserted when missing and activated or replaced when commented<br>  or active lines already exist.<br>- Use this escape hatch only when the key is valid and desired on the target host<br>  or distribution.<br>- ENCRYPT_METHOD may only be set here and is limited to SHA256, SHA512, or YESCRYPT. |
-| `logindefs_disabled` | False | `[]` | - Keys whose active /etc/login.defs lines should be commented out.<br>- This role does not disable HUSHLOGIN_FILE by default because that is site policy,<br>  not a universal security default. |
+| Name | Type | Required | Default | Description |
+| ---- | ---- | -------- | ------- | ----------- |
+| `logindefs_settings` | `dict` | `false` | LOGIN_TIMEOUT: '60'<br />LOGIN_RETRIES: '5'<br />FAILLOG_ENAB: 'yes'<br />LOG_OK_LOGINS: 'yes'<br />LOG_UNKFAIL_ENAB: 'no'<br />SYSLOG_SU_ENAB: 'yes'<br />SYSLOG_SG_ENAB: 'yes'<br />PASS_MAX_DAYS: '384'<br />PASS_MIN_DAYS: '1'<br />PASS_WARN_AGE: '7'<br />UMASK: '077'<br />HOME_MODE: '0700'<br />DEFAULT_HOME: 'no'<br />TTYPERM: '0600'<br />CHFN_RESTRICT: rwh<br />SHA_CRYPT_MIN_ROUNDS: '1000000'<br />SHA_CRYPT_MAX_ROUNDS: '1000000'<br />YESCRYPT_COST_FACTOR: '7' | Normal /etc/login.defs settings.<br>These settings are changed only when the key already exists as an active line in /etc/login.defs.<br>Missing keys and commented-only keys are skipped and are not inserted or activated.<br>ENCRYPT_METHOD is intentionally forbidden here and must be configured through logindefs_force_settings. |
+| `logindefs_force_settings` | `dict` | `false` | {} | Explicit force settings for /etc/login.defs.<br>These settings are inserted when missing and activated or replaced when commented or active lines already exist.<br>Use this escape hatch only when the key is valid and desired on the target host or distribution.<br>ENCRYPT_METHOD may only be set here and is limited to SHA256, SHA512, or YESCRYPT. |
+| `logindefs_disabled` | `list` | `false` | [] | Keys whose active /etc/login.defs lines should be commented out.<br>This role does not disable HUSHLOGIN_FILE by default because that is site policy, not a universal security default. |
 
 ## Managed Files
 
@@ -97,4 +97,4 @@ Minimal example for applying this role.
 This project is licensed under the MIT License.
 See [LICENSE](LICENSE) for the full license text.
 
-Copyright (c) 2024 Jonas Mauer.
+Copyright (c) 2024-2026 Jonas Mauer.
