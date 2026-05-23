@@ -1,7 +1,7 @@
 # role: logindefs
 # file: molecule/resources/playbooks/verify.yml
 
-- name: "PLAYBOOK | Verify | logindefs"
+- name: "Molecule | verify | logindefs"
   hosts: all
   gather_facts: true
   become: true

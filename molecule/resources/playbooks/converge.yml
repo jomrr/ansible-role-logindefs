@@ -1,7 +1,7 @@
 # role: logindefs
 # file: molecule/resources/playbooks/converge.yml
 
-- name: "LOGINDEFS | Converge"
+- name: "Molecule | converge | logindefs"
   hosts: all
   gather_facts: true
   roles:
