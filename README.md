@@ -1,6 +1,6 @@
 # Ansible Role: logindefs
 
-![GitHub](https://img.shields.io/github/license/jomrr/ansible-role-logindefs) ![GitHub last commit](https://img.shields.io/github/last-commit/jomrr/ansible-role-logindefs) ![GitHub issues](https://img.shields.io/github/issues-raw/jomrr/ansible-role-logindefs) [![dev](https://img.shields.io/github/actions/workflow/status/jomrr/ansible-role-logindefs/dev-push-smoke.yml?branch=dev&event=push&label=dev)](https://github.com/jomrr/ansible-role-logindefs/actions/workflows/dev-push-smoke.yml?query=branch%3Adev) [![main](https://img.shields.io/github/actions/workflow/status/jomrr/ansible-role-logindefs/main-full-gate.yml?branch=main&event=push&label=main)](https://github.com/jomrr/ansible-role-logindefs/actions/workflows/main-full-gate.yml?query=branch%3Amain)
+![GitHub](https://img.shields.io/github/license/jomrr/ansible-role-logindefs) ![GitHub last commit](https://img.shields.io/github/last-commit/jomrr/ansible-role-logindefs) ![GitHub issues](https://img.shields.io/github/issues-raw/jomrr/ansible-role-logindefs) [![dev](https://img.shields.io/github/actions/workflow/status/jomrr/ansible-role-logindefs/dev.yml?branch=dev&event=push&label=dev)](https://github.com/jomrr/ansible-role-logindefs/actions/workflows/dev.yml?query=branch%3Adev) [![main](https://img.shields.io/github/actions/workflow/status/jomrr/ansible-role-logindefs/main.yml?branch=main&event=push&label=main)](https://github.com/jomrr/ansible-role-logindefs/actions/workflows/main.yml?query=branch%3Amain)
 
 Conservatively manage /etc/login.defs.
 
@@ -27,6 +27,14 @@ Force settings are the explicit escape hatch for administrators who intentionall
 - Existing user accounts
 - useradd defaults outside /etc/login.defs
 - Distribution-specific authentication stacks
+
+## Dependencies
+
+```yaml
+collections:
+  - name: community.general
+    version: '>=12.0.0'
+```
 
 ## Role Variables
 

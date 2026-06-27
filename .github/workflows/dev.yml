@@ -1,6 +1,6 @@
 ---
 # role: logindefs
-# file: .github/workflows/dev-push-smoke.yml
+# file: .github/workflows/dev.yml
 
 name: dev push smoke
 
@@ -38,6 +38,13 @@ jobs:
         uses: astral-sh/setup-uv@v8.1.0
         with:
           enable-cache: true
+
+      - name: Install required Ansible Collections
+        run: |
+          set -euo pipefail
+          if [ -f collections.yml ]; then
+            uvx --from ansible-core ansible-galaxy install -fr collections.yml
+          fi
 
       - name: Show Podman environment
         run: |
