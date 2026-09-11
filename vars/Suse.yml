@@ -1,0 +1,5 @@
+---
+# role: logindefs
+# file: vars/Suse.yml
+
+__logindefs_vendor_file: /usr/etc/login.defs

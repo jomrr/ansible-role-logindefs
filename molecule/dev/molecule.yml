@@ -4,6 +4,9 @@
 
 dependency:
   name: "galaxy"
+  options:
+    requirements-file: "${MOLECULE_PROJECT_DIRECTORY}/collections.yml"
+    role-file: "${MOLECULE_PROJECT_DIRECTORY}/collections.yml"
 driver:
   name: "podman"
 provisioner:
@@ -12,51 +15,77 @@ provisioner:
     defaults:
       forks: 8
       interpreter_python: "auto_silent"
+      allow_world_readable_tmpfiles: true
       callbacks_enabled: "ansible.posix.profile_tasks,ansible.posix.timer"
       callback_result_format: "yaml"
+      remote_tmp: "~/.ansible/tmp"
     ssh_connection:
       pipelining: true
   log: true
   playbooks:
     converge: "../resources/playbooks/converge.yml"
     verify: "../resources/playbooks/verify.yml"
+    prepare: "../resources/playbooks/prepare.yml"
+  inventory:
+    group_vars:
+      all:
+        ansible_user: "logindefs_runner"
+        logindefs_force_settings:
+          PASS_MAX_DAYS: "90"
+          HOME_MODE: "0700"
+          CREATE_HOME: "yes"
+          HUSHLOGIN_FILE: ".forced-hushlogin"
+        logindefs_disabled:
+          - "HUSHLOGIN_FILE"
 verifier:
   name: "ansible"
 scenario:
+  test_sequence:
+    - "dependency"
+    - "destroy"
+    - "syntax"
+    - "create"
+    - "prepare"
+    - "check"
+    - "converge"
+    - "idempotence"
+    - "check"
+    - "verify"
+    - "destroy"
   name: "dev"
 platforms:
-  - name: almalinux-latest-logindefs
+  - name: "almalinux-latest-logindefs"
     image: "docker.io/jomrr/molecule-almalinux:latest"
     pre_build_image: true
     override_command: false
-    systemd: true
-  - name: archlinux-latest-logindefs
+    systemd: "true"
+  - name: "archlinux-latest-logindefs"
     image: "docker.io/jomrr/molecule-archlinux:latest"
     pre_build_image: true
     override_command: false
-    systemd: true
-  - name: debian-latest-logindefs
+    systemd: "true"
+  - name: "debian-latest-logindefs"
     image: "docker.io/jomrr/molecule-debian:latest"
     pre_build_image: true
     override_command: false
-    systemd: true
-  - name: fedora-latest-logindefs
+    systemd: "true"
+  - name: "fedora-latest-logindefs"
     image: "docker.io/jomrr/molecule-fedora:latest"
     pre_build_image: true
     override_command: false
-    systemd: true
-  - name: opensuse-leap-latest-logindefs
+    systemd: "true"
+  - name: "opensuse-leap-latest-logindefs"
     image: "docker.io/jomrr/molecule-opensuse-leap:latest"
     pre_build_image: true
     override_command: false
-    systemd: true
-  - name: opensuse-tumbleweed-latest-logindefs
+    systemd: "true"
+  - name: "opensuse-tumbleweed-latest-logindefs"
     image: "docker.io/jomrr/molecule-opensuse-tumbleweed:latest"
     pre_build_image: true
     override_command: false
-    systemd: true
-  - name: ubuntu-latest-logindefs
+    systemd: "true"
+  - name: "ubuntu-latest-logindefs"
     image: "docker.io/jomrr/molecule-ubuntu:latest"
     pre_build_image: true
     override_command: false
-    systemd: true
+    systemd: "true"

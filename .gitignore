@@ -4,6 +4,10 @@
 __pycache__/
 .ansible/
 .cache/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.uv-cache/
 .idea/
 .tox/
 .venv/

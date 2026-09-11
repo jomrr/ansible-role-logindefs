@@ -1,56 +1,96 @@
 ---
-# repo: jomrr/ansible-role-logindefs
+# role: logindefs
 # file: tasks/main.yml
 
-- name: "Check /etc/login.defs"
+- name: "LOGINDEFS | Validate the explicit password hash policy"
+  ansible.builtin.assert:
+    that:
+      - "'ENCRYPT_METHOD' not in logindefs_settings"
+      - >-
+        'ENCRYPT_METHOD' not in logindefs_force_settings
+        or logindefs_force_settings.ENCRYPT_METHOD in ['SHA256', 'SHA512', 'YESCRYPT']
+    quiet: true
+    fail_msg: >-
+      ENCRYPT_METHOD must be configured only through logindefs_force_settings
+      and must be SHA256, SHA512, or YESCRYPT.
+
+- name: "LOGINDEFS | Check whether the configuration needs bootstrapping"
   ansible.builtin.stat:
     path: /etc/login.defs
+    get_checksum: false
+    get_mime: false
+    get_attributes: false
   register: __logindefs_etc_file
 
-- name: "Fail when /etc/login.defs is missing"
+- name: "LOGINDEFS | Require an existing configuration outside SUSE"
   ansible.builtin.fail:
     msg: "/etc/login.defs does not exist on this host."
   when:
     - not __logindefs_etc_file.stat.exists
     - ansible_facts.os_family != "Suse"
 
-- name: "Create /etc/login.defs from SUSE vendor defaults"
+- name: "LOGINDEFS | Load SUSE vendor paths"
+  ansible.builtin.include_vars: Suse.yml
+  when: ansible_facts.os_family == "Suse"
+
+- name: "LOGINDEFS | Bootstrap the configuration from SUSE vendor defaults"
+  become: true
+  become_user: root
   ansible.builtin.copy:
-    src: /usr/etc/login.defs
+    src: "{{ __logindefs_vendor_file }}"
     dest: /etc/login.defs
     owner: root
     group: root
     mode: "0644"
     remote_src: true
+    force: false
   when:
     - not __logindefs_etc_file.stat.exists
     - ansible_facts.os_family == "Suse"
 
-- name: "Configure login.defs settings"
-  become: true
-  ansible.builtin.lineinfile:
-    path: "/etc/login.defs"
-    regexp: '^\s*{{ item.key | regex_escape }}\s+.*$'
-    line: "{{ item.key }} {{ item.value }}"
-    backrefs: true
-    backup: true
-  loop: "{{ logindefs_settings | dict2items }}"
-  when: item.key != "ENCRYPT_METHOD"
+- name: "LOGINDEFS | Update the available configuration"
+  when: not ansible_check_mode or __logindefs_etc_file.stat.exists
+  block:
+    - name: "LOGINDEFS | Configure existing active settings"
+      become: true
+      become_user: root
+      ansible.builtin.lineinfile:
+        path: /etc/login.defs
+        regexp: '^[ \t]*{{ __logindefs_setting.key | regex_escape }}[ \t]+.*$'
+        line: "{{ __logindefs_setting.key }} {{ __logindefs_setting.value }}"
+        backrefs: true
+        backup: true
+      loop: "{{ logindefs_settings | dict2items }}"
+      loop_control:
+        loop_var: __logindefs_setting
+        label: "{{ __logindefs_setting.key }}"
+      when:
+        - __logindefs_setting.key not in logindefs_force_settings
+        - __logindefs_setting.key not in logindefs_disabled
 
-- name: "Configure forced login.defs settings"
-  become: true
-  ansible.builtin.lineinfile:
-    path: "/etc/login.defs"
-    regexp: '^\s*#?\s*{{ item.key | regex_escape }}\s+.*$'
-    line: "{{ item.key }} {{ item.value }}"
-    backup: true
-  loop: "{{ logindefs_force_settings | dict2items }}"
+    - name: "LOGINDEFS | Configure forced settings"
+      become: true
+      become_user: root
+      ansible.builtin.lineinfile:
+        path: /etc/login.defs
+        regexp: '^[ \t]*#?[ \t]*{{ __logindefs_setting.key | regex_escape }}[ \t]+.*$'
+        line: "{{ __logindefs_setting.key }} {{ __logindefs_setting.value }}"
+        backup: true
+      loop: "{{ logindefs_force_settings | dict2items }}"
+      loop_control:
+        loop_var: __logindefs_setting
+        label: "{{ __logindefs_setting.key }}"
+      when: __logindefs_setting.key not in logindefs_disabled
 
-- name: "Disable active login.defs settings"
-  become: true
-  ansible.builtin.replace:
-    path: "/etc/login.defs"
-    regexp: '^(?!#)(\s*{{ item | regex_escape }}\s+.*)$'
-    replace: '# \1'
-    backup: true
-  loop: "{{ logindefs_disabled }}"
+    - name: "LOGINDEFS | Disable active settings"
+      become: true
+      become_user: root
+      ansible.builtin.replace:
+        path: /etc/login.defs
+        regexp: '^([ \t]*{{ __logindefs_disabled_key | regex_escape }}[ \t]+.*)$'
+        replace: '# \1'
+        backup: true
+      loop: "{{ logindefs_disabled }}"
+      loop_control:
+        loop_var: __logindefs_disabled_key
+        label: "{{ __logindefs_disabled_key }}"

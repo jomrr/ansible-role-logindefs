@@ -1,0 +1,61 @@
+---
+# role: logindefs
+# file: molecule/resources/playbooks/prepare.yml
+
+- name: LOGINDEFS | Prepare configuration lifecycle cases
+  hosts: all
+  gather_facts: true
+  vars:
+    ansible_user: root
+    __logindefs_fixture_paths:
+      Archlinux: /etc/login.defs
+      Debian: /etc/login.defs
+      RedHat: /etc/login.defs
+      Suse: /usr/etc/login.defs
+  tasks:
+    - name: LOGINDEFS | Create the unprivileged role runner
+      become: true
+      become_user: root
+      ansible.builtin.user:
+        name: logindefs_runner
+        create_home: true
+        shell: /bin/sh
+
+    - name: LOGINDEFS | Permit task-level privilege escalation
+      become: true
+      become_user: root
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/logindefs_molecule
+        content: "logindefs_runner ALL=(root) NOPASSWD: ALL\n"
+        owner: root
+        group: root
+        mode: '0440'
+        validate: visudo -cf %s
+
+    - name: LOGINDEFS | Seed active, commented, missing and disabled settings
+      become: true
+      become_user: root
+      ansible.builtin.copy:
+        dest: "{{ __logindefs_fixture_paths[ansible_facts.os_family] }}"
+        content: |
+          # Unmanaged distribution configuration must survive.
+          UMASK 022
+          PASS_MAX_DAYS 99999
+          PASS_MIN_DAYS 0
+          PASS_WARN_AGE 7
+          ENCRYPT_METHOD SHA512
+          # HOME_MODE 0755
+          # LOGIN_TIMEOUT 120
+
+          HUSHLOGIN_FILE .hushlogin
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: LOGINDEFS | Exercise SUSE bootstrapping from vendor defaults
+      become: true
+      become_user: root
+      ansible.builtin.file:
+        path: /etc/login.defs
+        state: absent
+      when: ansible_facts.os_family == 'Suse'

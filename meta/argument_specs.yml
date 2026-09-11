@@ -45,6 +45,7 @@ argument_specs:
           - Missing keys and commented-only keys are skipped and are not inserted or activated.
           - ENCRYPT_METHOD is intentionally forbidden here and must be configured through
             logindefs_force_settings.
+          - Force settings and disabled keys take precedence over normal settings.
       logindefs_force_settings:
         type: dict
         required: false
@@ -56,6 +57,7 @@ argument_specs:
           - Use this escape hatch only when the key is valid and desired on the target host
             or distribution.
           - ENCRYPT_METHOD may only be set here and is limited to SHA256, SHA512, or YESCRYPT.
+          - Disabled keys take precedence over force settings.
       logindefs_disabled:
         type: list
         elements: str
@@ -63,5 +65,6 @@ argument_specs:
         default: []
         description:
           - Keys whose active /etc/login.defs lines should be commented out.
+          - Disabled keys are not activated or inserted by either settings dictionary.
           - This role does not disable HUSHLOGIN_FILE by default because that is site policy,
             not a universal security default.

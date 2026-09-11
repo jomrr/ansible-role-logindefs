@@ -1,7 +1,8 @@
 ---
-# repo: jomrr/ansible-role-logindefs
+# role: logindefs
 # file: defaults/main.yml
 
+# Existing active settings; force settings and disabled keys take precedence.
 logindefs_settings:
   LOGIN_TIMEOUT: "60"
   LOGIN_RETRIES: "5"
@@ -26,6 +27,13 @@ logindefs_settings:
   SHA_CRYPT_MAX_ROUNDS: "1000000"
   YESCRYPT_COST_FACTOR: "7"
 
+# Explicit settings to insert or activate, except keys listed as disabled.
 logindefs_force_settings: {}
+# logindefs_force_settings:
+#   ENCRYPT_METHOD: SHA512
+#   PASS_MAX_DAYS: "90"
 
+# Active keys to comment out, overriding both settings dictionaries.
 logindefs_disabled: []
+# logindefs_disabled:
+#   - HUSHLOGIN_FILE
